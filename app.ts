@@ -58,31 +58,48 @@ function render() {
         for (let j = 0; j < 2; j++) {
             const p = i < paragraphs[j].length ? paragraphs[j][i] : [];
             const td = row.appendChild(document.createElement('td'));
-            p.forEach(n => td.appendChild(n.cloneNode()));
             if (i > 0) {
                 const mergeUpBtn = td.appendChild(document.createElement('button'));
-                mergeUpBtn.textContent = 'Merge Up';
-                mergeUpBtn.setAttribute('data-col', ''+j);
-                mergeUpBtn.setAttribute('data-row', ''+i);
+                mergeUpBtn.classList.add('merge-up');
+                mergeUpBtn.textContent = '⇧';
                 mergeUpBtn.onclick = mergeUp;
             }
+            td.setAttribute('data-col', ''+j);
+            td.setAttribute('data-row', ''+i);
+            td.setAttribute('contenteditable', 'true');
+            td.onkeyup = maybeSplit;
+            p.forEach(n => td.appendChild(n.cloneNode()));
         }
     }
 }
 
 function mergeUp(ev: Event) {
-    const el = ev.target as HTMLElement;
-    const i = parseInt(el.getAttribute('data-row')!);
-    const j = parseInt(el.getAttribute('data-col')!);
+    const btn = ev.target as HTMLElement;
+    const td = btn.parentNode! as HTMLElement;
+    const i = parseInt(td.getAttribute('data-row')!);
+    const j = parseInt(td.getAttribute('data-col')!);
     paragraphs[j][i-1] = paragraphs[j][i-1].concat(paragraphs[j][i]);
     paragraphs[j].splice(i, 1);
     render();
+}
+
+function maybeSplit(ev: Event) {
+    const td = ev.target as HTMLElement;
+    const split = td.querySelectorAll('p, div');
+    if (split.length > 0) {
+        const i = parseInt(td.getAttribute('data-row')!);
+        const j = parseInt(td.getAttribute('data-col')!);
+        paragraphs[j][i] = Array.from(split[0].childNodes);
+        paragraphs[j].splice(i+1, 0, Array.from(split[1].childNodes));
+        render();
+    }
 }
 
 const blockLevelEls = new Set(['div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'dl', 'pre', 'hr', 'blockquote', 'address', 'br']);
 
 function splitIntoFragments(el: HTMLElement): Node[][] {
     // TODO: best effort preservation of non-text nodes
+    // TODO: smarter segmentation
     let out: Node[][] = [];
     let accumulator: Node[] = [];
     let walker = (el: HTMLElement) => {
