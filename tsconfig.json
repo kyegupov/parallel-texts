@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "strict": true,
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "downlevelIteration": true,
+        "outDir": "./static",
+        "target": "es6",
+        "types": [
+        ]
+    },
+    "include": [
+        "*.ts"
+    ],
+}
