@@ -37,25 +37,46 @@ function editableOnChange(el: HTMLElement, action: (el: Element)=>void) {
     console.log(el);
 }
 
+let paragraphs: Node[][][] = [];
+
 function lay() {
     console.log('lay');
-    let para1 = splitIntoFragments(getEl('source1'));
-    console.log(para1);
-    let para2 = splitIntoFragments(getEl('source2'));
+    paragraphs = [
+        splitIntoFragments(getEl('source1')),
+        splitIntoFragments(getEl('source2')),
+    ];
+    render();
+}
+
+function render() {
     document.querySelectorAll('.text-row').forEach(
         (e: Element) => e.parentNode!.removeChild(e));
     const table = document.querySelector('table.main')!;
-    for (let i = 0; i < Math.max(para1.length, para2.length); i++) {
-        console.log('lay row ' + i);
-        const p1 = i < para1.length ? para1[i] : [];
-        const p2 = i < para2.length ? para2[i] : [];
+    for (let i = 0; i < Math.max(paragraphs[0].length, paragraphs[1].length); i++) {
         const row = table.appendChild(document.createElement('tr'));
         row.classList.add('text-row');
-        const td1 = row.appendChild(document.createElement('td'));
-        const td2 = row.appendChild(document.createElement('td'));
-        p1.forEach(n => td1.appendChild(n.cloneNode()));
-        p2.forEach(n => td2.appendChild(n.cloneNode()));
+        for (let j = 0; j < 2; j++) {
+            const p = i < paragraphs[j].length ? paragraphs[j][i] : [];
+            const td = row.appendChild(document.createElement('td'));
+            p.forEach(n => td.appendChild(n.cloneNode()));
+            if (i > 0) {
+                const mergeUpBtn = td.appendChild(document.createElement('button'));
+                mergeUpBtn.textContent = 'Merge Up';
+                mergeUpBtn.setAttribute('data-col', ''+j);
+                mergeUpBtn.setAttribute('data-row', ''+i);
+                mergeUpBtn.onclick = mergeUp;
+            }
+        }
     }
+}
+
+function mergeUp(ev: Event) {
+    const el = ev.target as HTMLElement;
+    const i = parseInt(el.getAttribute('data-row')!);
+    const j = parseInt(el.getAttribute('data-col')!);
+    paragraphs[j][i-1] = paragraphs[j][i-1].concat(paragraphs[j][i]);
+    paragraphs[j].splice(i, 1);
+    render();
 }
 
 const blockLevelEls = new Set(['div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'dl', 'pre', 'hr', 'blockquote', 'address', 'br']);
